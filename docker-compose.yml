@@ -1,0 +1,96 @@
+version: '3'
+services: 
+  rabbit:
+    container_name: rabbit-container
+    image: rabbitmq:3.7-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    restart: always
+  
+  postgres:
+    container_name: postgres-container
+    image: postgres
+    ports:
+      - "5432:5432"
+    environment: 
+      POSTGRES_DB: "orders"
+      POSTGRES_PASSWORD: "password"
+      POSTGRES_USER: "postgres"
+
+  db-admin:
+    container_name: db-admin-container
+    image: dpage/pgadmin4
+    restart: always
+    ports: 
+      - "8081:80"
+    depends_on: 
+      - postgres
+    volumes:
+      - ./util:/data
+    environment: 
+      PGADMIN_DEFAULT_EMAIL: admin@admin
+      PGADMIN_DEFAULT_PASSWORD: p@ssword
+
+  mongodb:
+    image: mongo
+    container_name: 'mongodb'
+    env_file: .env
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: products
+      MONGO_INITDB_ROOT_PASSWORD: password
+
+  http:
+    container_name: http-connector-container
+    build: 
+      context: http
+    image: http-connector
+    depends_on: 
+      - rabbit
+    ports: 
+      - "8000:8000"
+    links: 
+      - "rabbit:rabbit-container"
+    environment: 
+      RABBIT_PASSWORD: "guest"
+      RABBIT_USER: "guest"
+      RABBIT_HOST: "rabbit"
+      RABBIT_PORT: "5672"
+      RABBIT_MANAGEMENT_PORT: "15672"
+
+  cart:
+    container_name: cart-container
+    build: 
+      context: cart
+    image: cart
+    depends_on: 
+      - rabbit
+    links: 
+      - "rabbit:rabbit-container"
+    environment: 
+      RABBIT_PASSWORD: "guest"
+      RABBIT_USER: "guest"
+      RABBIT_HOST: "rabbit"
+      RABBIT_PORT: "5672"
+      RABBIT_MANAGEMENT_PORT: "15672"
+
+  orders:
+    build: 
+      context: orders
+    image: orders
+    container_name: orders-container
+    restart: unless-stopped
+    depends_on: 
+      - postgres
+    environment: 
+      DB_PASSWORD: "password"
+      DB_USER: "postgres"
+      DB_HOST: "postgres"
+      DB_NAME: "orders"
+      RABBIT_PASSWORD: "guest"
+      RABBIT_USER: "guest"
+      RABBIT_HOST: "rabbit"
+      RABBIT_PORT: "5672"
+      RABBIT_MANAGEMENT_PORT: "15672"
+  

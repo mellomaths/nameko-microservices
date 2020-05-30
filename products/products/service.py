@@ -4,7 +4,7 @@ from bson.objectid import ObjectId
 from nameko.rpc import rpc
 from nameko_structlog import StructlogDependency
 
-from mongoengine import connect
+from mongoengine import connect, DoesNotExist
 
 from marshmallow import ValidationError
 
@@ -59,7 +59,6 @@ class ProductsService(object):
             return error_response
 
         self.log.info(f'products.create:: product loaded {data}')
-        # Pattern: client.database.collection
         product = Product(**data)
         product.save()
         self.log.info(f'products.create:: product {product}')
@@ -71,11 +70,14 @@ class ProductsService(object):
         self.log.info(f'products.show:: start')
         self.log.info(f'products.show:: product id {product_id}')
 
-        product = Product.objects.get(id=ObjectId(product_id))
-        if not product:
+        try:
+            product = Product.objects.get(id=ObjectId(product_id))
+        except DoesNotExist as err:
+            self.log.info(f'products.show:: Product not found')
+            self.log.info(f'products.show:: Exception {err}')
+            self.log.info(f'products.show:: end')
             return None
 
-        # product['_id'] = str(product['_id'])
         self.log.info(f'products.show:: query result {product}')
         self.log.info(f'products.show:: end')
         return ProductSchema().dump(product)
@@ -85,9 +87,5 @@ class ProductsService(object):
         self.log.info(f'products.list:: start')
         product_list = list(Product.objects)
         self.log.info(f'products.list:: query result {product_list}')
-        # for product in product_list:
-        #     product['_id'] = str(product['_id'])
-
-        self.log.info(f'products.create:: product list {product_list}')
         self.log.info(f'products.create:: end')
         return ProductSchema().dump(product_list, many=True)

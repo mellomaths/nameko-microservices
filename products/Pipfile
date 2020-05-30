@@ -9,7 +9,7 @@ verify_ssl = true
 nameko = "*"
 marshmallow = "*"
 nameko-structlog = "*"
-pymongo = "*"
+mongoengine = "*"
 
 [requires]
 python_version = "3.8"

@@ -1,15 +1,14 @@
 import os
+from bson.objectid import ObjectId
 
 from nameko.rpc import rpc
-
 from nameko_structlog import StructlogDependency
 
-from pymongo import MongoClient
+from mongoengine import connect
 
 from marshmallow import ValidationError
 
-from bson.objectid import ObjectId
-
+from .models import Product
 from .schemas import ProductSchema
 
 
@@ -24,10 +23,14 @@ class ProductsService(object):
     mongodb_db_name = os.getenv('MONGODB_DB_NAME') or 'products'
     mongodb_authentication_base = os.getenv('MONGODB_AUTHENTICATION_BASE') or 'admin'
 
-    connect_uri = f'mongodb://{mongodb_user}:{mongodb_password}@' \
-                  f'{mongodb_host}:{mongodb_port}/{mongodb_db_name}?authSource={mongodb_authentication_base}'
-
-    client = MongoClient(connect_uri)
+    connect(
+        'products',
+        username=mongodb_user,
+        password=mongodb_password,
+        host=mongodb_host,
+        port=int(mongodb_port),
+        authentication_source=mongodb_authentication_base
+    )
 
     @rpc
     def home(self):
@@ -43,8 +46,7 @@ class ProductsService(object):
         self.log.info(f'products.create:: data {data}')
         schema = ProductSchema()
         try:
-            parsed = schema.dump(data)
-            schema.validate(parsed)
+            data = schema.load(data)
         except ValidationError as err:
             self.log.info(f'products.create:: validation error {err}')
             error_response = {
@@ -56,32 +58,36 @@ class ProductsService(object):
             }
             return error_response
 
+        self.log.info(f'products.create:: product loaded {data}')
         # Pattern: client.database.collection
-        product_id = self.client.products.products.insert_one(parsed).inserted_id
-        self.log.info(f'products.create:: product inserted successfully id {product_id}')
+        product = Product(**data)
+        product.save()
+        self.log.info(f'products.create:: product {product}')
         self.log.info(f'products.create:: end')
-        return {'id': str(product_id)}
+        return {'id': str(product.id)}
 
     @rpc
     def show(self, product_id):
         self.log.info(f'products.show:: start')
         self.log.info(f'products.show:: product id {product_id}')
-        product = self.client.products.products.find_one({'_id': ObjectId(product_id)})
-        product['_id'] = str(product['_id'])
+
+        product = Product.objects.get(id=ObjectId(product_id))
+        if not product:
+            return None
+
+        # product['_id'] = str(product['_id'])
         self.log.info(f'products.show:: query result {product}')
         self.log.info(f'products.show:: end')
-        return product
+        return ProductSchema().dump(product)
 
     @rpc
     def list(self):
         self.log.info(f'products.list:: start')
-        product_list = list(self.client.products.products.find())
+        product_list = list(Product.objects)
         self.log.info(f'products.list:: query result {product_list}')
-        for product in product_list:
-            product['_id'] = str(product['_id'])
+        # for product in product_list:
+        #     product['_id'] = str(product['_id'])
 
         self.log.info(f'products.create:: product list {product_list}')
         self.log.info(f'products.create:: end')
-        return product_list
-
-
+        return ProductSchema().dump(product_list, many=True)

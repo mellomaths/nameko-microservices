@@ -25,7 +25,7 @@ class ProductsService(object):
     connect_uri = f'mongodb://{mongodb_user}:{mongodb_password}@' \
                   f'{mongodb_host}:{mongodb_port}/{mongodb_db_name}?authSource={mongodb_authentication_base}'
 
-    database = MongoClient(connect_uri)
+    client = MongoClient(connect_uri)
 
     @rpc
     def home(self):
@@ -54,7 +54,8 @@ class ProductsService(object):
             }
             return error_response
 
-        product_id = self.database.products.insert_one(parsed).inserted_id
+        # Pattern: client.database.collection
+        product_id = self.client.products.products.insert_one(parsed).inserted_id
         self.log.info(f'products.create:: product inserted successfully id {product_id}')
         self.log.info(f'products.create:: end')
-        return {'id': product_id}
+        return {'id': str(product_id)}

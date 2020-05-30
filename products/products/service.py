@@ -8,6 +8,8 @@ from pymongo import MongoClient
 
 from marshmallow import ValidationError
 
+from bson.objectid import ObjectId
+
 from .schemas import ProductSchema
 
 
@@ -59,3 +61,27 @@ class ProductsService(object):
         self.log.info(f'products.create:: product inserted successfully id {product_id}')
         self.log.info(f'products.create:: end')
         return {'id': str(product_id)}
+
+    @rpc
+    def show(self, product_id):
+        self.log.info(f'products.show:: start')
+        self.log.info(f'products.show:: product id {product_id}')
+        product = self.client.products.products.find_one({'_id': ObjectId(product_id)})
+        product['_id'] = str(product['_id'])
+        self.log.info(f'products.show:: query result {product}')
+        self.log.info(f'products.show:: end')
+        return product
+
+    @rpc
+    def list(self):
+        self.log.info(f'products.list:: start')
+        product_list = list(self.client.products.products.find())
+        self.log.info(f'products.list:: query result {product_list}')
+        for product in product_list:
+            product['_id'] = str(product['_id'])
+
+        self.log.info(f'products.create:: product list {product_list}')
+        self.log.info(f'products.create:: end')
+        return product_list
+
+

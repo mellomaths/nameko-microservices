@@ -73,8 +73,8 @@ class ProductsService(object):
         try:
             product = Product.objects.get(id=ObjectId(product_id))
         except DoesNotExist as err:
-            self.log.info(f'products.show:: Product not found')
-            self.log.info(f'products.show:: Exception {err}')
+            self.log.info(f'products.show:: product not found')
+            self.log.info(f'products.show:: exception {err}')
             self.log.info(f'products.show:: end')
             return None
 
@@ -89,3 +89,35 @@ class ProductsService(object):
         self.log.info(f'products.list:: query result {product_list}')
         self.log.info(f'products.create:: end')
         return ProductSchema().dump(product_list, many=True)
+
+    @rpc
+    def decrement_stock(self, product_id, amount):
+        self.log.info(f'products.decrement_stock:: start')
+        self.log.info(f'products.decrement_stock:: product id {product_id}')
+        self.log.info(f'products.decrement_stock:: amount {amount}')
+        try:
+            product = Product.objects.get(id=ObjectId(product_id))
+        except DoesNotExist as err:
+            self.log.info(f'products.decrement_stock:: product not found')
+            self.log.info(f'products.decrement_stock:: exception {err}')
+            self.log.info(f'products.decrement_stock:: end')
+            return None
+
+        if product.quantity == 0:
+            self.log.info(f'products.decrement_stock:: there is no product {product_id} in stock')
+            error_response = {
+                'error': {
+                    'code': 'NOT_FOUND_IN_STOCK',
+                    'description': 'Quantity in stock for product cannot go lower than 0.'
+                }
+            }
+            self.log.info(f'products.decrement_stock:: error response {error_response}')
+            return error_response
+
+        self.log.info(f'products.decrement_stock:: product {product_id} quantity in stock before {product.quantity}')
+        product.quantity -= amount
+        self.log.info(f'products.decrement_stock:: product {product_id} quantity in stock after {product.quantity}')
+        product.save()
+        self.log.info(f'products.decrement_stock:: product {product}')
+        self.log.info(f'products.decrement_stock:: end')
+        return product

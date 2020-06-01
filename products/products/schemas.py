@@ -16,7 +16,7 @@ class ProductSchema(Schema):
     description = fields.String(required=True, validate=must_not_be_blank)
     department = fields.String(required=True, validate=must_not_be_blank)
     price = fields.Float(required=True)
-    in_stock = fields.Boolean(dump_only=True)
+    quantity = fields.Integer(required=True)
     created_at = fields.DateTime(dump_only=True)
 
     class Meta:

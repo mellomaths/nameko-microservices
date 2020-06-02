@@ -17,6 +17,7 @@ class HttpService(object):
     base_url = f'/api/{api_version}'
 
     products_rpc = RpcProxy('products')
+    cart_rpc = RpcProxy('carts')
 
     @http('GET', f'{base_url}/services/health')
     def services_health(self, request):
@@ -162,4 +163,70 @@ class HttpService(object):
             mimetype='application/json',
             status=status_code
         )
+
+    @http('POST', f'{base_url}/carts')
+    def create_cart(self, request):
+        self.log.info(f'httpConnector.create_cart:: start')
+        cart_id = self.cart_rpc.create()
+        self.log.info(f'httpConnector.create_cart:: cart id created {cart_id}')
+        location = f'{request.url}/{cart_id}'
+
+        self.log.info(f'httpConnector.create_cart:: end')
+        return Response(
+            '',
+            mimetype='application/json',
+            status=201,
+            headers={'Location': location}
+        )
+
+    @http('GET', f'{base_url}/carts/<string:cart_id>')
+    def get_cart_by_id(self, request, cart_id):
+        self.log.info(f'httpConnector.get_cart_by_id:: start')
+        self.log.info(f'httpConnector.get_cart_by_id:: cart id {cart_id}')
+        cart = self.cart_rpc.show(cart_id)
+        self.log.info(f'httpConnector.get_cart_by_id:: cart service response {cart}')
+        if not cart:
+            status_code = 404
+            error_response = {
+                'status_code': status_code,
+                'error': {
+                    'code': 'NOT_FOUND',
+                    'description': f'Cart {cart_id} was not found.'
+                }
+            }
+            self.log.info(f'httpConnector.get_cart_by_id:: error response {error_response}')
+            self.log.info(f'httpConnector.get_cart_by_id:: status code {status_code}')
+            self.log.info(f'httpConnector.get_cart_by_id:: end')
+            return Response(
+                json.dumps(error_response),
+                mimetype='application/json',
+                status=status_code
+            )
+
+        self.log.info(f'httpConnector.get_cart_by_id:: end')
+        return Response(
+            json.dumps(cart),
+            mimetype='application/json',
+            status=200
+        )
+
+    @http('POST', f'{base_url}/carts/<string:cart_id>/products')
+    def insert_product_into_cart(self, request, cart_id):
+        pass
+
+    @http('PUT', f'{base_url}/carts/<string:cart_id>/products/<string:product_id>')
+    def update_product_info_in_cart(self, request, cart_id, product_id):
+        pass
+
+    @http('DELETE', f'{base_url}/carts/<string:cart_id>/products/<string:product_id>')
+    def remove_product_from_cart(self, request, cart_id, product_id):
+        pass
+
+    @http('DELETE', f'{base_url}/carts/<string:cart_id>/products')
+    def clear_cart(self, request, cart_id):
+        pass
+
+    @http('DELETE', f'{base_url}/carts/<string:cart_id>')
+    def delete_cart(self, request, cart_id):
+        pass
 

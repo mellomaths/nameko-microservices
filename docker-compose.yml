@@ -9,6 +9,15 @@ services:
     restart: always
     networks:
       - app-network
+
+  redis:
+    container_name: redis-container
+    image: redis
+    ports:
+        - "6380:6379" # Exposing Redis on different port for convenience
+    restart: always
+    networks:
+      - app-network
   
   postgres:
     container_name: postgres-container
@@ -19,8 +28,10 @@ services:
       POSTGRES_DB: "orders"
       POSTGRES_PASSWORD: "password"
       POSTGRES_USER: "postgres"
+    networks:
+      - app-network
 
-  db-admin:
+  pg-admin:
     container_name: db-admin-container
     image: dpage/pgadmin4
     restart: always
@@ -33,6 +44,8 @@ services:
     environment: 
       PGADMIN_DEFAULT_EMAIL: admin@admin
       PGADMIN_DEFAULT_PASSWORD: p@ssword
+    networks:
+      - app-network
 
   mongodb:
     image: mongo
@@ -47,20 +60,6 @@ services:
       - app-network  
     volumes: 
       - mongodbdata:/data/db
-
-  # cart:
-  #   container_name: cart-container
-  #   build: 
-  #     context: cart
-  #   image: cart
-  #   depends_on: 
-  #     - rabbit
-  #   environment: 
-  #     RABBIT_PASSWORD: "guest"
-  #     RABBIT_USER: "guest"
-  #     RABBIT_HOST: "rabbit"
-  #     RABBIT_PORT: "5672"
-  #     RABBIT_MANAGEMENT_PORT: "15672"
 
   http-connector:
     container_name: http-connector-container
@@ -78,7 +77,30 @@ services:
       RABBIT_PORT: "5672"
       RABBIT_MANAGEMENT_PORT: "15672"
     networks:
-      - app-network  
+      - app-network
+
+  carts:
+    container_name: carts-container
+    build: 
+      context: carts
+    image: carts
+    depends_on: 
+      - rabbit
+      - redis
+    links: 
+      - rabbit
+      - redis
+    environment: 
+      RABBIT_PASSWORD: "guest"
+      RABBIT_USER: "guest"
+      RABBIT_HOST: "rabbit"
+      RABBIT_PORT: "5672"
+      RABBIT_MANAGEMENT_PORT: "15672"
+      REDIS_HOST: "redis"
+      REDIS_PORT: 6379
+      REDIS_INDEX: "11"
+    networks:
+      - app-network
 
   # orders:
   #   build: 
@@ -90,10 +112,10 @@ services:
   #     - rabbit
   #     - postgres
   #   environment: 
-  #     DB_PASSWORD: "password"
-  #     DB_USER: "postgres"
-  #     DB_HOST: "postgres"
-  #     DB_NAME: "orders"
+  #     POSTGRES_PASSWORD: "password"
+  #     POSTGRES_USER: "postgres"
+  #     POSTGRES_HOST: "postgres"
+  #     POSTGRES_DB_NAME: "orders"
   #     RABBIT_PASSWORD: "guest"
   #     RABBIT_USER: "guest"
   #     RABBIT_HOST: "rabbit"

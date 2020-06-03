@@ -1,5 +1,21 @@
 version: '2'
 services: 
+  master:
+    build: 
+      context: tests/locust
+    ports:
+     - "8089:8089"
+    volumes:
+      - ./tests/locust/:/mnt/locust
+    command: -f /mnt/locust/test.py --master -H http://master:8089
+  
+  worker:
+    build: 
+      context: tests/locust
+    volumes:
+      - ./tests/locust/:/mnt/locust
+    command: -f /mnt/locust/test.py --worker --master-host master
+
   rabbit:
     container_name: rabbit-container
     image: rabbitmq:3.7-management

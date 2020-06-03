@@ -1,4 +1,3 @@
-import json
 import random
 import datetime
 
@@ -10,8 +9,6 @@ from faker import Faker
 class QuickStartUser(locust.HttpUser):
     wait_time = locust.between(1, 2)
     fake = Faker()
-
-    product_uris = []
 
     @locust.task
     def test_post_products(self):

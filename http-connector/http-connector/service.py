@@ -212,7 +212,55 @@ class HttpService(object):
 
     @http('POST', f'{base_url}/carts/<string:cart_id>/products')
     def insert_product_into_cart(self, request, cart_id):
-        pass
+        self.log.info(f'httpConnector.insert_product_into_cart:: start')
+        self.log.info(f'httpConnector.insert_product_into_cart:: cart_id {cart_id}')
+        product_id = request.args.get('productId', None)
+        self.log.info(f'httpConnector.insert_product_into_cart:: product_id {product_id}')
+        if not product_id:
+            status_code = 400
+            error_response = {
+                'status_code': status_code,
+                'error': {
+                    'code': 'INVALID_REQUEST',
+                    'description': f'Query param productId is required.'
+                }
+            }
+            self.log.info(f'httpConnector.insert_product_into_cart:: error response {error_response}')
+            self.log.info(f'httpConnector.insert_product_into_cart:: status code {status_code}')
+            self.log.info(f'httpConnector.insert_product_into_cart:: end')
+            return Response(
+                json.dumps(error_response),
+                mimetype='application/json',
+                status=status_code
+            )
+
+        service_response = self.cart_rpc.insert_product(cart_id, product_id)
+        self.log.info(f'httpConnector.insert_product_into_cart:: service response {service_response}')
+        if 'error' in service_response:
+            if service_response['error']['code'] == 'NOT_FOUND':
+                status_code = 404
+                error_response = {
+                    'status_code': status_code,
+                    'error': service_response['error']
+                }
+                self.log.info(f'httpConnector.insert_product_into_cart:: error response {error_response}')
+                self.log.info(f'httpConnector.insert_product_into_cart:: status code {status_code}')
+                self.log.info(f'httpConnector.insert_product_into_cart:: end')
+                return Response(
+                    json.dumps(error_response),
+                    mimetype='application/json',
+                    status=status_code
+                )
+
+        cart = service_response
+        location = f'{request.url}/{product_id}'
+        self.log.info(f'httpConnector.insert_product_into_cart:: end')
+        return Response(
+            json.dumps(cart),
+            mimetype='application/json',
+            status=201,
+            headers={'Location': location}
+        )
 
     @http('PUT', f'{base_url}/carts/<string:cart_id>/products/<string:product_id>')
     def update_product_info_in_cart(self, request, cart_id, product_id):
@@ -229,4 +277,28 @@ class HttpService(object):
     @http('DELETE', f'{base_url}/carts/<string:cart_id>')
     def delete_cart(self, request, cart_id):
         pass
+
+    @http('POST', f'{base_url}/orders')
+    def create_order(self, request):
+        self.log.info(f'httpConnector.create_order:: start')
+        cart_id = request.args.get('cartId', None)
+        self.log.info(f'httpConnector.create_order:: cart_id {cart_id}')
+        if not cart_id:
+            status_code = 400
+            error_response = {
+                'status_code': status_code,
+                'error': {
+                    'code': 'INVALID_REQUEST',
+                    'description': f'Query param cartId is required.'
+                }
+            }
+            self.log.info(f'httpConnector.create_order:: error response {error_response}')
+            self.log.info(f'httpConnector.create_order:: status code {status_code}')
+            self.log.info(f'httpConnector.create_order:: end')
+            return Response(
+                json.dumps(error_response),
+                mimetype='application/json',
+                status=status_code
+            )
+
 

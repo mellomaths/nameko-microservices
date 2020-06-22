@@ -18,6 +18,7 @@ class HttpService(object):
 
     products_rpc = RpcProxy('products')
     cart_rpc = RpcProxy('carts')
+    orders_rpc = RpcProxy('orders')
 
     @http('GET', f'{base_url}/services/health')
     def services_health(self, request):
@@ -300,5 +301,10 @@ class HttpService(object):
                 mimetype='application/json',
                 status=status_code
             )
+
+        order = self.orders_rpc.create(cart_id)
+
+
+
 
 

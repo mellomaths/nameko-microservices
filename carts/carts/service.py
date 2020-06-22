@@ -28,7 +28,7 @@ class CartsService(object):
     def create(self):
         self.log.info(f'carts.create:: start')
         cart_id = uuid.uuid4().hex
-        cart = {'id': cart_id, 'products': []}
+        cart = {'id': cart_id, 'products': [], 'total_price': 0}
         self._set_json(cart_id, cart)
         self.log.info(f'carts.create:: cart id created {cart_id}')
         self.log.info(f'carts.create:: end')
@@ -76,7 +76,8 @@ class CartsService(object):
             self.log.info(f'carts.insert_product:: end')
             return error_response
 
-        cart.append(product)
+        cart['total_price'] += product['price']
+        cart['products'].append(product)
         self._set_json(cart_id, cart)
         self.log.info(f'carts.insert_product:: end')
         return cart

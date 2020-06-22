@@ -1,21 +1,5 @@
 version: '2'
 services: 
-  master:
-    build: 
-      context: tests/locust
-    ports:
-     - "8089:8089"
-    volumes:
-      - ./tests/locust/:/mnt/locust
-    command: -f /mnt/locust/test.py --master -H http://master:8089
-  
-  worker:
-    build: 
-      context: tests/locust
-    volumes:
-      - ./tests/locust/:/mnt/locust
-    command: -f /mnt/locust/test.py --worker --master-host master
-
   rabbit:
     container_name: rabbit-container
     image: rabbitmq:3.7-management
@@ -118,25 +102,27 @@ services:
     networks:
       - app-network
 
-  # orders:
-  #   build: 
-  #     context: orders
-  #   image: orders
-  #   container_name: orders-container
-  #   restart: unless-stopped
-  #   depends_on:
-  #     - rabbit
-  #     - postgres
-  #   environment: 
-  #     POSTGRES_PASSWORD: "password"
-  #     POSTGRES_USER: "postgres"
-  #     POSTGRES_HOST: "postgres"
-  #     POSTGRES_DB_NAME: "orders"
-  #     RABBIT_PASSWORD: "guest"
-  #     RABBIT_USER: "guest"
-  #     RABBIT_HOST: "rabbit"
-  #     RABBIT_PORT: "5672"
-  #     RABBIT_MANAGEMENT_PORT: "15672"
+  orders:
+    build: 
+      context: orders
+    image: orders
+    container_name: orders-container
+    restart: unless-stopped
+    depends_on:
+      - rabbit
+      - postgres
+    environment: 
+      POSTGRES_PASSWORD: "password"
+      POSTGRES_USER: "postgres"
+      POSTGRES_HOST: "postgres"
+      POSTGRES_DB_NAME: "orders"
+      RABBIT_PASSWORD: "guest"
+      RABBIT_USER: "guest"
+      RABBIT_HOST: "rabbit"
+      RABBIT_PORT: "5672"
+      RABBIT_MANAGEMENT_PORT: "15672"
+    networks:
+      - app-network
   
   products:
     build: 

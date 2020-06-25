@@ -5,6 +5,10 @@ from nameko.rpc import rpc, RpcProxy
 from nameko_redis import Redis
 from nameko_structlog import StructlogDependency
 
+from marshmallow import ValidationError
+
+from .schemas import CartSchema, ProductSchema
+
 
 class CartsService(object):
     name = 'carts'
@@ -28,7 +32,8 @@ class CartsService(object):
     def create(self):
         self.log.info(f'carts.create:: start')
         cart_id = uuid.uuid4().hex
-        cart = {'id': cart_id, 'products': [], 'total_price': 0}
+        schema = CartSchema()
+        cart = schema.dump({'id': cart_id})
         self._set_json(cart_id, cart)
         self.log.info(f'carts.create:: cart id created {cart_id}')
         self.log.info(f'carts.create:: end')
@@ -44,10 +49,23 @@ class CartsService(object):
         return cart
 
     @rpc
-    def insert_product(self, cart_id, product_id):
+    def insert_product(self, cart_id, data):
         self.log.info(f'carts.insert_product:: start')
         self.log.info(f'carts.insert_product:: cart id {cart_id}')
-        self.log.info(f'carts.insert_product:: product id {product_id}')
+        self.log.info(f'carts.insert_product:: data received {data}')
+        try:
+            product_info = ProductSchema().load(data)
+        except ValidationError as err:
+            self.log.info(f'carts.insert_product:: validation error {err}')
+            error_response = {
+                'error': {
+                    'code': 'VALIDATION_ERROR',
+                    'description': 'Validation Error',
+                    'validations': err.messages
+                }
+            }
+            return error_response
+
         cart = self.show(cart_id)
         self.log.info(f'carts.insert_product:: cart {cart}')
         if not cart:
@@ -62,6 +80,7 @@ class CartsService(object):
             self.log.info(f'carts.insert_product:: end')
             return error_response
 
+        product_id = product_info['product_id']
         product = self.products_rpc.show(product_id)
         self.log.info(f'carts.insert_product:: product {product}')
         if not product:
@@ -76,8 +95,10 @@ class CartsService(object):
             self.log.info(f'carts.insert_product:: end')
             return error_response
 
-        cart['total_price'] += product['price']
-        cart['products'].append(product)
+        cart['total_price'] += product['price'] * product_info['amount']
+        product_info['price'] = product['price']
+        self.log.info(f'carts.insert_product:: product added to cart {product_info}')
+        cart['products'].append(product_info)
         self._set_json(cart_id, cart)
         self.log.info(f'carts.insert_product:: end')
         return cart

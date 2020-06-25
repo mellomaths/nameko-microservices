@@ -5,11 +5,11 @@ from nameko.rpc import rpc, RpcProxy
 from nameko_redis import Redis
 from nameko_structlog import StructlogDependency
 
-from marshmallow import ValidationError
+from .schemas import CartSchema
 
-from .schemas import CartSchema, ProductSchema
+from .cases import ProductDomain, CartDomain
 
-from .helpers import Helper
+from .dto import CustomValidationError
 
 
 class CartsService(object):
@@ -56,56 +56,44 @@ class CartsService(object):
         self.log.info(f'carts.insert_product:: cart id {cart_id}')
         self.log.info(f'carts.insert_product:: data received {data}')
         try:
-            product_to_add = ProductSchema().load(data)
-        except ValidationError as err:
-            self.log.info(f'carts.insert_product:: validation error {err}')
-            error_response = {
-                'error': {
-                    'code': 'VALIDATION_ERROR',
-                    'description': 'Validation Error',
-                    'validations': err.messages
-                }
-            }
-            return error_response
+            product_payload = ProductDomain.load_product(data)
+        except CustomValidationError as validation_error:
+            product_validation_error = validation_error.as_dict()
+            self.log.info(f'carts.insert_product:: product validation error {product_validation_error}')
+            self.log.info(f'carts.insert_product:: end')
+            return {'error': product_validation_error}
 
         cart = self.show(cart_id)
         self.log.info(f'carts.insert_product:: cart {cart}')
-        if not cart:
-            self.log.info(f'carts.insert_product:: cart not found')
-            error_response = {
-                'error': {
-                    'code': 'NOT_FOUND',
-                    'description': f'Cart {cart_id} was not found.'
-                }
-            }
-            self.log.info(f'carts.insert_product:: error response {error_response}')
+        cart_validation = CartDomain.validate_cart(cart, cart_id)
+        if cart_validation.has_errors:
+            cart_validation_error = cart_validation.as_dict()
+            self.log.info(f'carts.insert_product:: cart validation error {cart_validation_error}')
             self.log.info(f'carts.insert_product:: end')
-            return error_response
+            return {'error': cart_validation_error}
 
-        product_id = product_to_add['product_id']
+        product_id = product_payload['product_id']
         product = self.products_rpc.show(product_id)
         self.log.info(f'carts.insert_product:: product {product}')
-        if not product:
-            self.log.info(f'carts.insert_product:: product not found')
-            error_response = {
-                'error': {
-                    'code': 'NOT_FOUND',
-                    'description': f'Product {product_id} was not found.'
-                }
-            }
-            self.log.info(f'carts.insert_product:: error response {error_response}')
+        product_validation = ProductDomain.validate_product(product, product_id)
+        if product_validation.has_errors:
+            product_validation_error = product_validation.as_dict()
+            self.log.info(f'carts.insert_product:: product validation error {product_validation_error}')
             self.log.info(f'carts.insert_product:: end')
-            return error_response
+            return {'error': product_validation_error}
 
-        product_to_add['price'] = product['price']
-        self.log.info(f'carts.insert_product:: product added to cart {product_to_add}')
-        total_price = Helper.calculate_new_cart_total_price(cart, product_to_add)
-        cart['total_price'] += total_price
-        self.log.info(f'carts.insert_product:: cart new total price {total_price}')
-        cart['products'].append(product_to_add)
+        try:
+            cart_updated = CartDomain.add_product_to_cart(cart, product_payload, product)
+        except CustomValidationError as validation_error:
+            cart_validation_error = validation_error.as_dict()
+            self.log.info(f'carts.insert_product:: cart validation error {cart_validation_error}')
+            self.log.info(f'carts.insert_product:: end')
+            return {'error': cart_validation_error}
+
+        self.log.info(f'carts.insert_product:: cart updated info {cart_updated}')
         self._set_json(cart_id, cart)
         self.log.info(f'carts.insert_product:: end')
-        return cart
+        return cart_updated
 
     @rpc
     def update_product(self, cart_id, product_id, data):

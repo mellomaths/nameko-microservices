@@ -1,7 +1,7 @@
 import datetime
 
 from sqlalchemy import (
-    DECIMAL, Column, DateTime, ForeignKey, Integer, String, Float
+    Column, DateTime, ForeignKey, Integer, String, Float
 )
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
@@ -25,7 +25,7 @@ DeclarativeBase = declarative_base(cls=Base)
 
 
 class Order(DeclarativeBase):
-    __tablename__ = 'order'
+    __tablename__ = 'orders'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     products = relationship('Product', back_populates='order')
@@ -34,9 +34,9 @@ class Order(DeclarativeBase):
 
 
 class Product(DeclarativeBase):
-    __tablename__ = 'product'
+    __tablename__ = 'products'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    order_id = Column(Integer, ForeignKey('order.id'))
+    order_id = Column(Integer, ForeignKey('orders.id'))
     order = relationship('Order', back_populates='products')
 
     serial_number = Column(String)

@@ -2,10 +2,10 @@ from marshmallow import Schema, fields
 
 
 class ProductSchema(Schema):
-    id = fields.String(required=True, dump_only=True, attribute='product_id')
+    id = fields.String(dump_only=True, attribute='product_id')
     product_id = fields.String(required=True, load_only=True)
-    amount = fields.String(required=True)
-    price = fields.Float(required=True)
+    amount = fields.Integer(required=True)
+    price = fields.Float(dump_only=True)
 
 
 class CartSchema(Schema):

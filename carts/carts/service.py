@@ -9,6 +9,8 @@ from marshmallow import ValidationError
 
 from .schemas import CartSchema, ProductSchema
 
+from .helpers import Helper
+
 
 class CartsService(object):
     name = 'carts'
@@ -54,7 +56,7 @@ class CartsService(object):
         self.log.info(f'carts.insert_product:: cart id {cart_id}')
         self.log.info(f'carts.insert_product:: data received {data}')
         try:
-            product_info = ProductSchema().load(data)
+            product_to_add = ProductSchema().load(data)
         except ValidationError as err:
             self.log.info(f'carts.insert_product:: validation error {err}')
             error_response = {
@@ -80,7 +82,7 @@ class CartsService(object):
             self.log.info(f'carts.insert_product:: end')
             return error_response
 
-        product_id = product_info['product_id']
+        product_id = product_to_add['product_id']
         product = self.products_rpc.show(product_id)
         self.log.info(f'carts.insert_product:: product {product}')
         if not product:
@@ -95,10 +97,12 @@ class CartsService(object):
             self.log.info(f'carts.insert_product:: end')
             return error_response
 
-        cart['total_price'] += product['price'] * product_info['amount']
-        product_info['price'] = product['price']
-        self.log.info(f'carts.insert_product:: product added to cart {product_info}')
-        cart['products'].append(product_info)
+        product_to_add['price'] = product['price']
+        self.log.info(f'carts.insert_product:: product added to cart {product_to_add}')
+        total_price = Helper.calculate_new_cart_total_price(cart, product_to_add)
+        cart['total_price'] += total_price
+        self.log.info(f'carts.insert_product:: cart new total price {total_price}')
+        cart['products'].append(product_to_add)
         self._set_json(cart_id, cart)
         self.log.info(f'carts.insert_product:: end')
         return cart

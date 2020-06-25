@@ -6,6 +6,10 @@ ADD ./config.yml /usr/src/app
 ADD ./Pipfile /usr/src/app
 ADD ./Pipfile.lock /usr/src/app
 ADD ./run.sh /usr/src/app
+
+COPY ./alembic.ini /usr/src/app
+COPY ./alembic/ /usr/src/app/alembic/
+
 COPY . .
 
 RUN pip install --upgrade pip

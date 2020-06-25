@@ -7,6 +7,10 @@
 #     sleep 2
 # done
 
+# Run Migrations
+
+alembic upgrade head
+
 # Run the service
 
 nameko run --config config.yml orders.service --backdoor 3000

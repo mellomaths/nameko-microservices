@@ -8,6 +8,8 @@ from werkzeug.wrappers import Response
 
 from .entrypoints import http
 
+from .helpers import map_error_code_to_status_code
+
 
 class HttpService(object):
     name = 'httpConnector'
@@ -240,20 +242,19 @@ class HttpService(object):
         service_response = self.cart_rpc.insert_product(cart_id, json_data)
         self.log.info(f'httpConnector.insert_product_into_cart:: service response {service_response}')
         if 'error' in service_response:
-            if service_response['error']['code'] == 'NOT_FOUND':
-                status_code = 404
-                error_response = {
-                    'status_code': status_code,
-                    'error': service_response['error']
-                }
-                self.log.info(f'httpConnector.insert_product_into_cart:: error response {error_response}')
-                self.log.info(f'httpConnector.insert_product_into_cart:: status code {status_code}')
-                self.log.info(f'httpConnector.insert_product_into_cart:: end')
-                return Response(
-                    json.dumps(error_response),
-                    mimetype='application/json',
-                    status=status_code
-                )
+            status_code = map_error_code_to_status_code(service_response['error']['code'])
+            error_response = {
+                'status_code': status_code,
+                'error': service_response['error']
+            }
+            self.log.info(f'httpConnector.insert_product_into_cart:: error response {error_response}')
+            self.log.info(f'httpConnector.insert_product_into_cart:: status code {status_code}')
+            self.log.info(f'httpConnector.insert_product_into_cart:: end')
+            return Response(
+                json.dumps(error_response),
+                mimetype='application/json',
+                status=status_code
+            )
 
         cart = service_response
         product_id = json_data['product_id']
@@ -316,9 +317,3 @@ class HttpService(object):
             status=201,
             headers={'Location': location}
         )
-
-
-
-
-
-

@@ -303,6 +303,17 @@ class HttpService(object):
             )
 
         order = self.orders_rpc.create(cart_id)
+        order_id = order['id']
+        self.log.info(f'httpConnector.create_order:: order id created {order_id}')
+        location = f'{request.url}/{order_id}'
+        self.log.info(f'httpConnector.create_order:: end')
+        return Response(
+            '',
+            mimetype='application/json',
+            status=201,
+            headers={'Location': location}
+        )
+
 
 
 

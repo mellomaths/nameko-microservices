@@ -97,6 +97,7 @@ class CartsService(object):
             return None
 
         cart['products'] = []
+        cart['total_price'] = 0
         self._set_json(cart_id, cart)
         return cart
 

@@ -171,7 +171,6 @@ class HttpService(object):
         cart_id = self.cart_rpc.create()
         self.log.info(f'httpConnector.create_cart:: cart id created {cart_id}')
         location = f'{request.url}/{cart_id}'
-
         self.log.info(f'httpConnector.create_cart:: end')
         return Response(
             '',
@@ -215,15 +214,18 @@ class HttpService(object):
     def insert_product_into_cart(self, request, cart_id):
         self.log.info(f'httpConnector.insert_product_into_cart:: start')
         self.log.info(f'httpConnector.insert_product_into_cart:: cart_id {cart_id}')
-        product_id = request.args.get('productId', None)
-        self.log.info(f'httpConnector.insert_product_into_cart:: product_id {product_id}')
-        if not product_id:
+        data = request.data
+        self.log.info(f'httpConnector.insert_product_into_cart:: body request {data}')
+        try:
+            json_data = json.loads(data)
+        except json.JSONDecodeError as err:
+            self.log.info(f'httpConnector.insert_product_into_cart:: body in request is not a valid json')
             status_code = 400
             error_response = {
                 'status_code': status_code,
                 'error': {
-                    'code': 'INVALID_REQUEST',
-                    'description': f'Query param productId is required.'
+                    'code': 'INVALID_JSON',
+                    'description': 'Body request should be a valid JSON.'
                 }
             }
             self.log.info(f'httpConnector.insert_product_into_cart:: error response {error_response}')
@@ -235,7 +237,7 @@ class HttpService(object):
                 status=status_code
             )
 
-        service_response = self.cart_rpc.insert_product(cart_id, product_id)
+        service_response = self.cart_rpc.insert_product(cart_id, json_data)
         self.log.info(f'httpConnector.insert_product_into_cart:: service response {service_response}')
         if 'error' in service_response:
             if service_response['error']['code'] == 'NOT_FOUND':
@@ -254,6 +256,7 @@ class HttpService(object):
                 )
 
         cart = service_response
+        product_id = json_data['product_id']
         location = f'{request.url}/{product_id}'
         self.log.info(f'httpConnector.insert_product_into_cart:: end')
         return Response(

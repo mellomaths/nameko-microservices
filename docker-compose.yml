@@ -107,7 +107,6 @@ services:
       context: orders
     image: orders
     container_name: orders-container
-    restart: unless-stopped
     depends_on:
       - rabbit
       - postgres

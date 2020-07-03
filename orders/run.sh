@@ -1,11 +1,22 @@
 #!/bin/bash
 
-# Check if rabbit and redis are up and running before starting the service.
+echo "$(date) - Check if rabbit and postgres are up and running before starting the service."
 
-# until nc -z ${RABBIT_HOST} ${RABBIT_PORT}; do
-#     echo "$(date) - waiting for rabbitmq..."
-#     sleep 2
-# done
+while ! nc -z $RABBIT_HOST $RABBIT_PORT
+do 
+  echo "$(date) - waiting for rabbitmq..."
+  sleep 3
+done 
+
+echo "$(date) - Rabbit is up and running."
+
+while ! nc -z $POSTGRES_HOST $POSTGRES_PORT
+do 
+  echo "$(date) - waiting for postgres..."
+  sleep 3
+done 
+
+echo "$(date) - Postgres is up and running."
 
 # Run Migrations
 

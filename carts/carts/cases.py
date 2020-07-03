@@ -40,6 +40,16 @@ class CartDomain:
         return cart
 
     @staticmethod
+    def clear_cart(cart, cart_id):
+        validation = CartDomain.validate_cart(cart, cart_id)
+        if validation.has_errors:
+            raise validation
+
+        cart['products'] = []
+        cart['total_price'] = 0
+        return cart
+
+    @staticmethod
     def validate_cart(cart, cart_id):
         validation = CustomValidationError()
         if not cart:

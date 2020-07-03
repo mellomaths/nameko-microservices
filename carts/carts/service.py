@@ -111,13 +111,28 @@ class CartsService(object):
 
     @rpc
     def clear(self, cart_id):
-        cart = self._get_json(cart_id)
-        if not cart:
-            return None
+        self.log.info(f'carts.clear:: start')
+        self.log.info(f'carts.clear:: cart id {cart_id}')
+        validation = CartDomain.validate_cart_id(cart_id)
+        if validation.has_errors:
+            validation_error = validation.as_dict()
+            self.log.info(f'carts.clear:: cart validation error {validation_error}')
+            self.log.info(f'carts.clear:: end')
+            return {'error': validation_error}
 
-        cart['products'] = []
-        cart['total_price'] = 0
+        cart = self._get_json(cart_id)
+        self.log.info(f'carts.clear:: cart {cart}')
+        try:
+            cart = CartDomain.clear_cart(cart, cart_id)
+        except CustomValidationError as validation_error:
+            cart_validation_error = validation_error.as_dict()
+            self.log.info(f'carts.clear:: product validation error {cart_validation_error}')
+            self.log.info(f'carts.clear:: end')
+            return {'error': cart_validation_error}
+
+        self.log.info(f'carts.clear:: cart cleared {cart}')
         self._set_json(cart_id, cart)
+        self.log.info(f'carts.clear:: end')
         return cart
 
     @rpc

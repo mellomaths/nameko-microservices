@@ -49,6 +49,18 @@ class CartDomain:
         return validation
 
     @staticmethod
+    def validate_cart_id(cart_id):
+        validation = CustomValidationError()
+        try:
+            uuid.UUID(hex=cart_id, version=4)
+        except ValueError:
+            error_message = f'Cart ID {cart_id} is not a valid UUID.'
+            errors = {'id': ['Not a valid UUID.']}
+            validation.set_validation_error(error_message, errors)
+
+        return validation
+
+    @staticmethod
     def calculate_new_cart_total_price(current_total_price, product_price, product_amount):
         new_product_price = product_price * product_amount
         total_price = current_total_price + new_product_price

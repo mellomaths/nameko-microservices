@@ -44,6 +44,13 @@ class CartsService(object):
     def show(self, cart_id):
         self.log.info(f'carts.show:: start')
         self.log.info(f'carts.show:: cart id {cart_id}')
+        validation = CartDomain.validate_cart_id(cart_id)
+        if validation.has_errors:
+            validation_error = validation.as_dict()
+            self.log.info(f'carts.show:: cart validation error {validation_error}')
+            self.log.info(f'carts.show:: end')
+            return {'error': validation_error}
+
         cart = self._get_json(cart_id)
         self.log.info(f'carts.show:: cart {cart}')
         self.log.info(f'carts.show:: end')

@@ -185,8 +185,24 @@ class HttpService(object):
     def get_cart_by_id(self, request, cart_id):
         self.log.info(f'httpConnector.get_cart_by_id:: start')
         self.log.info(f'httpConnector.get_cart_by_id:: cart id {cart_id}')
-        cart = self.cart_rpc.show(cart_id)
-        self.log.info(f'httpConnector.get_cart_by_id:: cart service response {cart}')
+        service_response = self.cart_rpc.show(cart_id)
+        self.log.info(f'httpConnector.get_cart_by_id:: cart service response {service_response}')
+        if 'error' in service_response:
+            status_code = map_error_code_to_status_code(service_response['error']['code'])
+            error_response = {
+                'status_code': status_code,
+                'error': service_response['error']
+            }
+            self.log.info(f'httpConnector.get_cart_by_id:: error response {error_response}')
+            self.log.info(f'httpConnector.get_cart_by_id:: status code {status_code}')
+            self.log.info(f'httpConnector.get_cart_by_id:: end')
+            return Response(
+                json.dumps(error_response),
+                mimetype='application/json',
+                status=status_code
+            )
+
+        cart = service_response
         if not cart:
             status_code = 404
             error_response = {

@@ -1,7 +1,7 @@
-import uuid
 import json
 
 from nameko.rpc import rpc, RpcProxy
+
 from nameko_redis import Redis
 from nameko_structlog import StructlogDependency
 
@@ -33,9 +33,8 @@ class CartsService(object):
     @rpc
     def create(self):
         self.log.info(f'carts.create:: start')
-        cart_id = uuid.uuid4().hex
-        schema = CartSchema()
-        cart = schema.dump({'id': cart_id})
+        cart = CartDomain.create_cart()
+        cart_id = cart['id']
         self._set_json(cart_id, cart)
         self.log.info(f'carts.create:: cart id created {cart_id}')
         self.log.info(f'carts.create:: end')

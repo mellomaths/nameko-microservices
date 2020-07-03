@@ -1,3 +1,5 @@
+import uuid
+
 from marshmallow import ValidationError
 
 from .schemas import ProductSchema, CartSchema
@@ -29,6 +31,13 @@ class ProductDomain:
 
 
 class CartDomain:
+
+    @staticmethod
+    def create_cart():
+        cart_id = uuid.uuid4().hex
+        schema = CartSchema()
+        cart = schema.dump({'id': cart_id})
+        return cart
 
     @staticmethod
     def validate_cart(cart, cart_id):

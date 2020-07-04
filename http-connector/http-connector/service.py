@@ -203,24 +203,6 @@ class HttpService(object):
             )
 
         cart = service_response
-        if not cart:
-            status_code = 404
-            error_response = {
-                'status_code': status_code,
-                'error': {
-                    'code': 'NOT_FOUND',
-                    'description': f'Cart {cart_id} was not found.'
-                }
-            }
-            self.log.info(f'httpConnector.get_cart_by_id:: error response {error_response}')
-            self.log.info(f'httpConnector.get_cart_by_id:: status code {status_code}')
-            self.log.info(f'httpConnector.get_cart_by_id:: end')
-            return Response(
-                json.dumps(error_response),
-                mimetype='application/json',
-                status=status_code
-            )
-
         self.log.info(f'httpConnector.get_cart_by_id:: end')
         return Response(
             json.dumps(cart),

@@ -271,7 +271,20 @@ class HttpService(object):
 
     @http('DELETE', f'{base_url}/carts/<string:cart_id>/products/<string:product_id>')
     def remove_product_from_cart(self, request, cart_id, product_id):
-        pass
+        self.log.info(f'httpConnector.remove_product_from_cart:: start')
+        self.log.info(f'httpConnector.remove_product_from_cart:: cart id {cart_id}')
+        self.log.info(f'httpConnector.remove_product_from_cart:: product id {product_id}')
+        service_response = self.cart_rpc.remove_product(cart_id, product_id)
+        # self.log.info(f'httpConnector.remove_product_from_cart:: service response {service_response}')
+        if 'error' in service_response:
+            service_response_error = service_response['error']
+            self.log.info(f'httpConnector.remove_product_from_cart:: service response error {service_response_error}')
+
+        self.log.info(f'httpConnector.remove_product_from_cart:: end')
+        return Response(
+            '',
+            status=204
+        )
 
     @http('DELETE', f'{base_url}/carts/<string:cart_id>/products')
     def clear_cart(self, request, cart_id):

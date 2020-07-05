@@ -4,7 +4,7 @@ from marshmallow import Schema, fields
 class ProductSchema(Schema):
     id = fields.Integer()
     order_id = fields.Integer()
-    serial_number = fields.String()
+    sku = fields.String()
     title = fields.String()
     description = fields.String()
     price = fields.String()

@@ -39,7 +39,7 @@ class Product(DeclarativeBase):
     order_id = Column(Integer, ForeignKey('orders.id'))
     order = relationship('Order', back_populates='products')
 
-    serial_number = Column(String)
+    sku = Column(String)
     title = Column(String, nullable=False)
     description = Column(String)
     price = Column(Float, nullable=False)

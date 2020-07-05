@@ -4,7 +4,7 @@ from marshmallow import ValidationError
 
 from .schemas import ProductSchema, CartSchema
 
-from .dto import CustomValidationError
+from .exceptions import CustomValidationError
 
 
 class ProductDomain:
@@ -78,7 +78,7 @@ class CartDomain:
 
     @staticmethod
     def get_product_from_cart(cart, product_id):
-        products = cart['products']
+        products = cart.get('products', [])
         result = list(filter((lambda product: product['id'] == product_id), products))
         if len(result) == 0:
             return None
@@ -112,3 +112,15 @@ class CartDomain:
 
         schema = CartSchema()
         return schema.dump(cart)
+
+    @staticmethod
+    def remove_product_from_cart(cart, product_id):
+        validation = CustomValidationError()
+        product = CartDomain.get_product_from_cart(cart, product_id)
+        if not product:
+            error_message = f'Product {product_id} is not in the cart.'
+            validation.set_not_found_error(error_message)
+            raise validation
+
+        cart['products'].remove(product)
+        return cart

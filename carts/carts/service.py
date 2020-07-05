@@ -9,7 +9,7 @@ from .schemas import CartSchema
 
 from .cases import ProductDomain, CartDomain
 
-from .dto import CustomValidationError
+from .exceptions import CustomValidationError
 
 
 class CartsService(object):
@@ -76,15 +76,13 @@ class CartsService(object):
             self.log.info(f'carts.insert_product:: end')
             return {'error': product_validation_error}
 
-        cart = self.show(cart_id)
-        self.log.info(f'carts.insert_product:: cart {cart}')
-        cart_validation = CartDomain.validate_cart(cart, cart_id)
-        if cart_validation.has_errors:
-            cart_validation_error = cart_validation.as_dict()
-            self.log.info(f'carts.insert_product:: cart validation error {cart_validation_error}')
-            self.log.info(f'carts.insert_product:: end')
-            return {'error': cart_validation_error}
+        service_response = self.show(cart_id)
+        if 'error' in service_response:
+            self.log.info(f'carts.insert_product:: find cart error {service_response}')
+            return service_response
 
+        cart = service_response
+        self.log.info(f'carts.insert_product:: cart {cart}')
         product_id = product_payload['product_id']
         product = self.products_rpc.show(product_id)
         self.log.info(f'carts.insert_product:: product {product}')
@@ -114,7 +112,25 @@ class CartsService(object):
 
     @rpc
     def remove_product(self, cart_id, product_id):
-        pass
+        self.log.info(f'carts.remove_product:: start')
+        self.log.info(f'carts.remove_product:: cart id {cart_id}')
+        self.log.info(f'carts.remove_product:: product id {product_id}')
+        service_response = self.show(cart_id)
+        if 'error' in service_response:
+            return service_response
+
+        cart = service_response
+        try:
+            cart = CartDomain.remove_product_from_cart(cart, product_id)
+        except CustomValidationError as validation_error:
+            cart_validation_error = validation_error.as_dict()
+            self.log.info(f'carts.remove_product:: cart validation error {cart_validation_error}')
+            self.log.info(f'carts.remove_product:: end')
+            return {'error': cart_validation_error}
+
+        self.log.info(f'carts.remove_product:: cart {cart}')
+        self.log.info(f'carts.remove_product:: end')
+        return cart
 
     @rpc
     def clear(self, cart_id):

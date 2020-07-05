@@ -13,7 +13,7 @@ services:
     container_name: redis-container
     image: redis
     ports:
-        - "6380:6379" # Exposing Redis on different port for convenience
+        - "6379:6379"
     networks:
       - app-network
   

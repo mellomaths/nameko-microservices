@@ -20,6 +20,14 @@ class OrdersService:
     carts_rpc = RpcProxy('carts')
 
     @rpc
+    def health_check(self):
+        self.log.info(f'orders.health:: start')
+        response = 'Orders service is up and running!'
+        self.log.info(f'orders.health:: response {response}')
+        self.log.info(f'orders.health:: end')
+        return response
+
+    @rpc
     def create(self, cart_id):
         self.log.info(f'orders.create:: start')
         self.log.info(f'orders.create:: cart id {cart_id}')

@@ -33,7 +33,7 @@ class ProductsService(object):
     )
 
     @rpc
-    def home(self):
+    def health_check(self):
         self.log.info(f'products.home:: start')
         response = 'Products service is up and running!'
         self.log.info(f'products.home:: response {response}')

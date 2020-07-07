@@ -31,6 +31,14 @@ class CartsService(object):
         return json.loads(data)
 
     @rpc
+    def health_check(self):
+        self.log.info(f'carts.health:: start')
+        response = 'Carts service is up and running!'
+        self.log.info(f'carts.health:: response {response}')
+        self.log.info(f'carts.health:: end')
+        return response
+
+    @rpc
     def create(self):
         self.log.info(f'carts.create:: start')
         cart = CartDomain.create_cart()

@@ -27,11 +27,21 @@ class HttpService(object):
         self.log.info(f'httpConnector.services_heath:: start')
 
         self.log.info(f'httpConnector.services_heath:: requesting products rpc')
-        products_message = self.products_rpc.home()
+        products_message = self.products_rpc.health_check()
         self.log.info(f'httpConnector.services_heath:: products rpc response {products_message}')
 
+        self.log.info(f'httpConnector.services_heath:: requesting carts rpc')
+        carts_message = self.cart_rpc.health_check()
+        self.log.info(f'httpConnector.services_heath:: carts rpc response {carts_message}')
+
+        self.log.info(f'httpConnector.services_heath:: requesting carts rpc')
+        orders_message = self.orders_rpc.health_check()
+        self.log.info(f'httpConnector.services_heath:: orders rpc response {orders_message}')
+
         json_data = {
-            'products': products_message
+            'products': products_message,
+            'carts': carts_message,
+            'orders': orders_message
         }
 
         data = json.dumps(json_data)

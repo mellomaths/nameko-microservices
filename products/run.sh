@@ -1,11 +1,22 @@
 #!/bin/bash
 
-# Check if rabbit and redis are up and running before starting the service.
+echo "$(date) - Check if rabbit and mongodb are up and running before starting the service."
 
-# until nc -z ${RABBIT_HOST} ${RABBIT_PORT}; do
-#     echo "$(date) - waiting for rabbitmq..."
-#     sleep 2
-# done
+while ! nc -z $RABBIT_HOST $RABBIT_PORT
+do
+  echo "$(date) - waiting for rabbitmq..."
+  sleep 3
+done
+
+echo "$(date) - Rabbit is up and running."
+
+while ! nc -z $MONGODB_HOST $MONGODB_PORT
+do
+  echo "$(date) - waiting for mongodb..."
+  sleep 3
+done
+
+echo "$(date) - MongoDB is up and running."
 
 # Run the service
 

@@ -11,6 +11,8 @@ COPY . .
 RUN pip install --upgrade pip
 RUN pip install pipenv
 
+RUN apt-get update && apt-get install -y netcat
+
 # RUN apt-get update
 # RUN apt-get install -y --no-install-recommends gcc python3-dev libssl-dev
 

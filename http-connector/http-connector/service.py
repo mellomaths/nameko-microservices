@@ -82,6 +82,18 @@ class HttpService(object):
 
         service_response = self.products_rpc.create(json_data)
         self.log.info(f'httpConnector.create_products:: products_rpc.create response {service_response}')
+        if 'error' in service_response:
+            if service_response['error']['code'] == "VALIDATION_ERROR":
+                status_code = 422
+                self.log.info(f'httpConnector.create_products:: error response {service_response}')
+                self.log.info(f'httpConnector.create_products:: status code {status_code}')
+                self.log.info(f'httpConnector.create_products:: end')
+                return Response(
+                    json.dumps({'status_code': status_code, 'error': service_response['error']}),
+                    status=status_code,
+                    mimetype='application/json'
+                )
+
         if 'id' in service_response:
             status_code = 201
             product_id = service_response['id']
@@ -96,20 +108,8 @@ class HttpService(object):
                 '',
                 status=status_code,
                 mimetype='application/json',
-                headers={'Location': location}
+                headers={'Location': location, 'Entity': product_id}
             )
-
-        if 'error' in service_response:
-            if service_response['error']['code'] == "VALIDATION_ERROR":
-                status_code = 422
-                self.log.info(f'httpConnector.create_products:: error response {service_response}')
-                self.log.info(f'httpConnector.create_products:: status code {status_code}')
-                self.log.info(f'httpConnector.create_products:: end')
-                return Response(
-                    json.dumps({'status_code': status_code, 'error': service_response['error']}),
-                    status=status_code,
-                    mimetype='application/json'
-                )
 
         status_code = 500
         error_response = {
@@ -188,7 +188,7 @@ class HttpService(object):
             '',
             mimetype='application/json',
             status=201,
-            headers={'Location': location}
+            headers={'Location': location, 'Entity': cart_id}
         )
 
     @http('GET', f'{base_url}/carts/<string:cart_id>')

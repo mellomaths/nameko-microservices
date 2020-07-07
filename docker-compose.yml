@@ -133,7 +133,7 @@ services:
     environment:
       MONGODB_DB_NAME: products
       MONGODB_HOST: mongodb
-      MONGODB_POST: 27017
+      MONGODB_PORT: 27017
       MONGODB_USER: system
       MONGODB_PASSWORD: system
       MONGODB_AUTHENTICATION_BASE: admin

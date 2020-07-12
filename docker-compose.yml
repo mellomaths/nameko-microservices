@@ -28,6 +28,8 @@ services:
       POSTGRES_USER: "postgres"
     networks:
       - app-network
+    volumes:
+      - ./.docker/dbdata/postgres:/var/lib/postgresql
 
   pg-admin:
     container_name: db-admin-container
@@ -37,7 +39,7 @@ services:
     depends_on: 
       - postgres
     volumes:
-      - ./util:/data
+      - ./.docker/dbdata/pgadmin:/var/lib/pgadmin
     environment: 
       PGADMIN_DEFAULT_EMAIL: admin@admin
       PGADMIN_DEFAULT_PASSWORD: p@ssword
@@ -150,4 +152,4 @@ networks:
     driver: bridge
 
 volumes:
-  mongodbdata:
+  mongodbdata: 

@@ -84,6 +84,24 @@ services:
     image: carts
     depends_on: 
       - rabbit
+    links: 
+      - rabbit
+    environment: 
+      RABBIT_PASSWORD: "guest"
+      RABBIT_USER: "guest"
+      RABBIT_HOST: "rabbit"
+      RABBIT_PORT: "5672"
+      RABBIT_MANAGEMENT_PORT: "15672"
+    networks:
+      - app-network
+
+  redis-connector:
+    container_name: redis-connector-container
+    build: 
+      context: redis-connector
+    image: redis-connector
+    depends_on: 
+      - rabbit
       - redis
     links: 
       - rabbit

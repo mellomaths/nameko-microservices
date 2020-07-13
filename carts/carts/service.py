@@ -1,8 +1,6 @@
 import json
 
 from nameko.rpc import rpc, RpcProxy
-
-from nameko_redis import Redis
 from nameko_structlog import StructlogDependency
 
 from .schemas import CartSchema
@@ -16,24 +14,24 @@ class CartsService(object):
     name = 'carts'
     log = StructlogDependency()
 
-    database = Redis('production')
-
     products_rpc = RpcProxy('products')
-
-    def _set_json(self, key, json_data):
-        self.database.set(key, json.dumps(json_data))
-        return key
-
-    def _get_json(self, key):
-        data = self.database.get(key)
-        if not data:
-            return None
-        return json.loads(data)
+    redis_connector_rpc = RpcProxy('redis-connector')
 
     @rpc
     def health_check(self):
         self.log.info(f'carts.health:: start')
-        response = 'Carts service is up and running!'
+        response = {
+            'ok': True,
+            'dependencies': []
+        }
+        self.log.info(f'carts.health:: check dependencies health')
+        redis_connector_response = self.redis_connector_rpc.health_check()
+        self.log.info(f'carts.health:: redis connector health check {redis_connector_response}')
+
+        if not redis_connector_response['ok']:
+            response['ok'] = False
+        response['dependencies'].append({'name': 'redis-connector', 'ok': redis_connector_response['ok']})
+
         self.log.info(f'carts.health:: response {response}')
         self.log.info(f'carts.health:: end')
         return response
@@ -43,7 +41,7 @@ class CartsService(object):
         self.log.info(f'carts.create:: start')
         cart = CartDomain.create_cart()
         cart_id = cart['id']
-        self._set_json(cart_id, cart)
+        self.redis_connector_rpc.save(cart_id, cart)
         self.log.info(f'carts.create:: cart id created {cart_id}')
         self.log.info(f'carts.create:: end')
         return cart_id
@@ -59,7 +57,7 @@ class CartsService(object):
             self.log.info(f'carts.show:: end')
             return {'error': validation_error}
 
-        cart = self._get_json(cart_id)
+        cart = self.redis_connector_rpc.get(cart_id)
         validation = CartDomain.validate_cart(cart, cart_id)
         if validation.has_errors:
             validation_error = validation.as_dict()
@@ -110,7 +108,7 @@ class CartsService(object):
             return {'error': cart_validation_error}
 
         self.log.info(f'carts.insert_product:: cart updated info {cart_updated}')
-        self._set_json(cart_id, cart)
+        self.redis_connector_rpc.save(cart_id, cart)
         self.log.info(f'carts.insert_product:: end')
         return cart_updated
 
@@ -136,6 +134,7 @@ class CartsService(object):
             self.log.info(f'carts.remove_product:: end')
             return {'error': cart_validation_error}
 
+        self.redis_connector_rpc.save(cart_id, cart)
         self.log.info(f'carts.remove_product:: cart {cart}')
         self.log.info(f'carts.remove_product:: end')
         return cart
@@ -151,7 +150,7 @@ class CartsService(object):
             self.log.info(f'carts.clear:: end')
             return {'error': validation_error}
 
-        cart = self._get_json(cart_id)
+        cart = self.redis_connector_rpc.get(cart_id)
         self.log.info(f'carts.clear:: cart {cart}')
         try:
             cart = CartDomain.clear_cart(cart, cart_id)
@@ -162,7 +161,7 @@ class CartsService(object):
             return {'error': cart_validation_error}
 
         self.log.info(f'carts.clear:: cart cleared {cart}')
-        self._set_json(cart_id, cart)
+        self.redis_connector_rpc.save(cart_id, cart)
         self.log.info(f'carts.clear:: end')
         return cart
 

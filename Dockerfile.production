@@ -1,5 +1,4 @@
 FROM python:3.8-slim-buster as builder
-ENV PIP_NO_CACHE_DIR=1
 
 RUN pip install pipenv
 

@@ -1,29 +1,27 @@
-FROM python:3.8-slim
+FROM python:3.8-slim-buster as builder
+
+RUN pip install pipenv
 
 WORKDIR /usr/src/app
 
-ADD ./config.yml /usr/src/app
-ADD ./Pipfile /usr/src/app
-ADD ./Pipfile.lock /usr/src/app
-ADD ./run.sh /usr/src/app
-COPY . .
+COPY Pipfile* ./
+RUN pipenv lock --requirements > requirements.txt
 
+
+FROM python:3.8-slim-buster
+ENV PIP_NO_CACHE_DIR=1
 RUN pip install --upgrade pip
-RUN pip install pipenv
-
 RUN apt-get update && apt-get install -y netcat
 
-# RUN apt-get update
-# RUN apt-get install -y --no-install-recommends gcc python3-dev libssl-dev
+WORKDIR /usr/src/app
 
-RUN pipenv install --system --deploy --ignore-pipfile
+COPY --from=builder /usr/src/app/requirements.txt ./
+RUN pip install -r requirements.txt
 
-# RUN apt-get remove -y gcc python3-dev libssl-dev
-# RUN apt-get autoremove -y 
-# RUN pip uninstall pipenv -y
+COPY . .
 
 RUN chmod +x /usr/src/app/run.sh
 
 EXPOSE 8000
 
-CMD [ "/usr/src/app/run.sh" ]
+ENTRYPOINT [ "/usr/src/app/run.sh" ]

@@ -1,5 +1,4 @@
 FROM python:3.8-slim-buster as builder
-ENV PIP_NO_CACHE_DIR=1
 
 RUN pip install pipenv
 
@@ -24,4 +23,4 @@ RUN chmod +x /usr/src/app/run.sh
 
 EXPOSE 8000
 
-CMD [ "/usr/src/app/run.sh" ]
+ENTRYPOINT [ "/usr/src/app/run.sh" ]

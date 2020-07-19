@@ -1,4 +1,6 @@
-FROM python:3.8-slim-buster as builder
+FROM python:3.8-slim-buster as base
+
+FROM base as builder
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
@@ -10,7 +12,7 @@ COPY Pipfile* ./
 RUN pipenv lock --requirements > requirements.txt
 
 
-FROM python:3.8-slim-buster
+FROM base
 ENV PIP_NO_CACHE_DIR=1
 RUN pip install --upgrade pip
 

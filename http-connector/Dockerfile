@@ -15,7 +15,7 @@ RUN pip install --upgrade pip
 WORKDIR /usr/src/app
 
 COPY --from=builder /usr/src/app/requirements.txt ./
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 

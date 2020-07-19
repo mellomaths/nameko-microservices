@@ -59,11 +59,28 @@ services:
     volumes: 
       - mongodbdata:/data/db
 
-  http-connector:
-    container_name: http-connector-container
+  # http-connector:
+  #   container_name: http-connector-container
+  #   build: 
+  #     context: http-connector
+  #   image: http-connector
+  #   depends_on: 
+  #     - rabbit
+  #   ports: 
+  #     - "8000:8000"
+  #   environment: 
+  #     RABBIT_PASSWORD: "guest"
+  #     RABBIT_USER: "guest"
+  #     RABBIT_HOST: "rabbit"
+  #     RABBIT_PORT: "5672"
+  #     RABBIT_MANAGEMENT_PORT: "15672"
+  #   networks:
+  #     - app-network
+
+  gateway:
     build: 
-      context: http-connector
-    image: http-connector
+      context: gateway
+    image: gateway
     depends_on: 
       - rabbit
     ports: 
@@ -74,6 +91,8 @@ services:
       RABBIT_HOST: "rabbit"
       RABBIT_PORT: "5672"
       RABBIT_MANAGEMENT_PORT: "15672"
+      ENV: development
+      API_VERSION: v1
     networks:
       - app-network
 

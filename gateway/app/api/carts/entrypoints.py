@@ -16,3 +16,11 @@ def health_check(settings: config.Settings = Depends(config.get_settings)):
 
         return Response(status_code=status.HTTP_503_SERVICE_UNAVAILABLE)
 
+
+@router.post('/', status_code=status.HTTP_201_CREATED)
+def create_cart(request: Request, settings: config.Settings = Depends(config.get_settings)):
+    with ClusterRpcProxy(settings.cluster_rpc_proxy_config) as rpc:
+        cart_id = rpc.carts.create()
+        headers = {'Location': f'{request.url}{cart_id}', 'Entity': cart_id}
+        return Response(status_code=status.HTTP_201_CREATED, headers=headers)
+

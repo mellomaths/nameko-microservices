@@ -2,6 +2,8 @@ from fastapi import APIRouter, Depends, status, Request, Response
 from fastapi.responses import JSONResponse
 from nameko.standalone.rpc import ClusterRpcProxy
 
+from .models import ProductIn
+
 from ..deps import map_error_code_to_status_code
 
 from ...core import config
@@ -43,3 +45,19 @@ def get_cart_by_id(cart_id: str, settings: config.Settings = Depends(config.get_
         return JSONResponse(content=service_response, status_code=status.HTTP_200_OK)
 
 
+@router.post('/{cart_id}/products', status_code=status.HTTP_204_NO_CONTENT)
+def insert_product_into_cart(cart_id: str, product_in: ProductIn, request: Request,
+                             settings: config.Settings = Depends(config.get_settings)):
+    with ClusterRpcProxy(settings.cluster_rpc_proxy_config) as rpc:
+        service_response = rpc.carts.insert_product(cart_id, product_in)
+        error = service_response.get('error', None)
+        if error:
+            status_code = map_error_code_to_status_code(error.get('code'))
+            error_response = {
+                'status_code': status_code,
+                'error': error
+            }
+            return JSONResponse(content=error_response, status_code=status_code)
+
+        headers = {'Location': f'{request.url}{product_in.product_id}', 'Entity': product_in.product_id}
+        return JSONResponse(content=service_response, status_code=status.HTTP_201_CREATED, headers=headers)

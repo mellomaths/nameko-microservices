@@ -62,3 +62,18 @@ def insert_product_into_cart(cart_id: str, product_in: ProductIn, request: Reque
         headers = {'Location': f'{request.url}{product_in.product_id}', 'Entity': product_in.product_id}
         return JSONResponse(content=service_response, status_code=status.HTTP_201_CREATED, headers=headers)
 
+
+@router.delete('/{cart_id}/products/{product_id}', status_code=status.HTTP_204_NO_CONTENT)
+def remove_product_from_cart(cart_id: str, product_id: str, settings: config.Settings = Depends(config.get_settings)):
+    with ClusterRpcProxy(settings.cluster_rpc_proxy_config) as rpc:
+        service_response = rpc.carts.remove_product(cart_id, product_id)
+        error = service_response.get('error', None)
+        if error:
+            status_code = map_error_code_to_status_code(error.get('code'))
+            error_response = {
+                'status_code': status_code,
+                'error': error
+            }
+            # Log: error response
+
+        return Response(status_code=status.HTTP_204_NO_CONTENT)

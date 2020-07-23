@@ -45,7 +45,7 @@ def get_cart_by_id(cart_id: str, settings: config.Settings = Depends(config.get_
         return JSONResponse(content=service_response, status_code=status.HTTP_200_OK)
 
 
-@router.post('/{cart_id}/products', status_code=status.HTTP_204_NO_CONTENT)
+@router.post('/{cart_id}/products', status_code=status.HTTP_201_CREATED)
 def insert_product_into_cart(cart_id: str, product_in: ProductIn, request: Request,
                              settings: config.Settings = Depends(config.get_settings)):
     with ClusterRpcProxy(settings.cluster_rpc_proxy_config) as rpc:
@@ -61,3 +61,4 @@ def insert_product_into_cart(cart_id: str, product_in: ProductIn, request: Reque
 
         headers = {'Location': f'{request.url}{product_in.product_id}', 'Entity': product_in.product_id}
         return JSONResponse(content=service_response, status_code=status.HTTP_201_CREATED, headers=headers)
+

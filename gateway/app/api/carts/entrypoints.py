@@ -77,3 +77,21 @@ def remove_product_from_cart(cart_id: str, product_id: str, settings: config.Set
             # Log: error response
 
         return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.delete('/{cart_id}/products')
+def clear_cart(cart_id: str, settings: config.Settings = Depends(config.get_settings)):
+    with ClusterRpcProxy(settings.cluster_rpc_proxy_config) as rpc:
+        service_response = rpc.carts.clear(cart_id)
+        error = service_response.get('error', None)
+        if error:
+            status_code = map_error_code_to_status_code(error.get('code'))
+            if status_code != status.HTTP_404_NOT_FOUND:
+                error_response = {
+                    'status_code': status_code,
+                    'error': error
+                }
+
+                return JSONResponse(content=error_response, status_code=status_code)
+
+        return Response(status_code=status.HTTP_204_NO_CONTENT)

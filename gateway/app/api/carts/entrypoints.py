@@ -34,7 +34,11 @@ def get_cart_by_id(cart_id: str, settings: config.Settings = Depends(config.get_
         error = service_response.get('error', None)
         if error:
             status_code = map_error_code_to_status_code(error.get('code'))
-            return Response(status_code=status_code)
+            error_response = {
+                'status_code': status_code,
+                'error': error
+            }
+            return JSONResponse(content=error_response, status_code=status_code)
 
         return JSONResponse(content=service_response, status_code=status.HTTP_200_OK)
 

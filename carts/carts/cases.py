@@ -77,11 +77,6 @@ class CartDomain:
 
         return validation
 
-    @staticmethod
-    def calculate_new_cart_total_price(current_total_price, product_price, product_amount):
-        new_product_price = product_price * product_amount
-        total_price = current_total_price + new_product_price
-        return total_price
 
     @staticmethod
     def get_product_from_cart(cart, product_id):
@@ -102,20 +97,12 @@ class CartDomain:
             validation.set_business_rule_error(error_message)
             raise validation
 
-        current_total_price = cart['total_price']
-        product_price = product['price']
-        product_amount = payload['amount']
-        cart['total_price'] = CartDomain.calculate_new_cart_total_price(
-            current_total_price,
-            product_price,
-            product_amount
-        )
-
         payload['id'] = product_id
         # Update payload product price with the information from products service
-        payload['price'] = product_price
-
+        payload['price'] = product['price']
         cart['products'].append(payload)
+
+        cart['total_price'] += ProductDomain.calculate_product_total_price(product)
 
         schema = CartSchema()
         return schema.dump(cart)

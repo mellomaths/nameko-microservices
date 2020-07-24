@@ -49,7 +49,7 @@ def get_cart_by_id(cart_id: str, settings: config.Settings = Depends(config.get_
 def insert_product_into_cart(cart_id: str, product_in: ProductIn, request: Request,
                              settings: config.Settings = Depends(config.get_settings)):
     with ClusterRpcProxy(settings.cluster_rpc_proxy_config) as rpc:
-        service_response = rpc.carts.insert_product(cart_id, product_in)
+        service_response = rpc.carts.insert_product(cart_id, product_in.dict())
         error = service_response.get('error', None)
         if error:
             status_code = map_error_code_to_status_code(error.get('code'))

@@ -7,3 +7,12 @@ class ProductIn(BaseModel):
     department: str
     price: float
     quantity: int
+
+
+class ProductOut(BaseModel):
+    id: str
+    title: str
+    description: str
+    department: str
+    price: float
+    quantity: int

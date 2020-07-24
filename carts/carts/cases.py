@@ -29,7 +29,6 @@ class ProductDomain:
 
         return validation
 
-
     @staticmethod
     def calculate_product_total_price(product):
         price = product.get('price')
@@ -76,7 +75,6 @@ class CartDomain:
             validation.set_validation_error(error_message, errors)
 
         return validation
-
 
     @staticmethod
     def get_product_from_cart(cart, product_id):

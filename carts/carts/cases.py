@@ -30,6 +30,13 @@ class ProductDomain:
         return validation
 
 
+    @staticmethod
+    def calculate_product_total_price(product):
+        price = product.get('price')
+        amount = product.get('amount')
+        return price * amount
+
+
 class CartDomain:
 
     @staticmethod

@@ -117,4 +117,5 @@ class CartDomain:
             raise validation
 
         cart['products'].remove(product)
+        cart['total_price'] -= ProductDomain.calculate_product_total_price(product)
         return cart

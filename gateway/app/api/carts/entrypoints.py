@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, status, Request, Response
 from fastapi.responses import JSONResponse
 from nameko.standalone.rpc import ClusterRpcProxy
 
-from .models import ProductIn
+from .models import ProductIn, CartOut
 
 from ..deps import map_error_code_to_status_code
 
@@ -29,7 +29,7 @@ def create_cart(request: Request, settings: config.Settings = Depends(config.get
         return Response(status_code=status.HTTP_201_CREATED, headers=headers)
 
 
-@router.get('/{cart_id}', status_code=status.HTTP_200_OK)
+@router.get('/{cart_id}', status_code=status.HTTP_200_OK, response_model=CartOut)
 def get_cart_by_id(cart_id: str, settings: config.Settings = Depends(config.get_settings)):
     with ClusterRpcProxy(settings.cluster_rpc_proxy_config) as rpc:
         service_response = rpc.carts.show(cart_id)

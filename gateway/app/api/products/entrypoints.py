@@ -42,7 +42,7 @@ def list_all_products(settings: config.Settings = Depends(config.get_settings)):
 
 
 @router.get('/{product_id}', status_code=status.HTTP_200_OK)
-def describe_product_by_id(product_id: str, settings: config.Settings = Depends(config.get_settings)):
+def get_product_by_id(product_id: str, settings: config.Settings = Depends(config.get_settings)):
     with ClusterRpcProxy(settings.cluster_rpc_proxy_config) as rpc:
         product = rpc.products.show(product_id)
         if not product:

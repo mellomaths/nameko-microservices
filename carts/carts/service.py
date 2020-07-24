@@ -159,4 +159,16 @@ class CartsService(object):
 
     @rpc
     def delete(self, cart_id):
-        pass
+        self.log.info(f'carts.delete:: start')
+        self.log.info(f'carts.delete:: cart id {cart_id}')
+        validation = CartDomain.validate_cart_id(cart_id)
+        if validation.has_errors:
+            validation_error = validation.as_dict()
+            self.log.info(f'carts.delete:: cart validation error {validation_error}')
+            self.log.info(f'carts.delete:: end')
+            return {'error': validation_error}
+
+        result = self.redis_connector_rpc.delete(cart_id)
+        self.log.info(f'carts.delete:: delete result {result}')
+        self.log.info(f'carts.delete:: end')
+        return result

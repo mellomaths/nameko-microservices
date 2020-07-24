@@ -109,17 +109,6 @@ class CartsService(object):
         return cart_updated
 
     @rpc
-    def update_product(self, cart_id, product_id, data):
-        self.log.info(f'carts.update_product:: start')
-        self.log.info(f'carts.update_product:: cart id {cart_id}')
-        self.log.info(f'carts.update_product:: product id {product_id}')
-        self.log.info(f'carts.update_product:: data {data}')
-
-
-        self.log.info(f'carts.update_product:: end')
-        pass
-
-    @rpc
     def remove_product(self, cart_id, product_id):
         self.log.info(f'carts.remove_product:: start')
         self.log.info(f'carts.remove_product:: cart id {cart_id}')

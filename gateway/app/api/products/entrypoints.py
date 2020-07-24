@@ -1,10 +1,12 @@
+from typing import List
+
 from fastapi import APIRouter, Depends, status, Request, Response
 from fastapi.responses import JSONResponse
 from nameko.standalone.rpc import ClusterRpcProxy
 
 from ...core import config
 
-from .models import ProductIn
+from .models import ProductIn, ProductOut
 
 router = APIRouter()
 
@@ -34,14 +36,14 @@ def create_product(product_in: ProductIn, request: Request, settings: config.Set
         return Response(status_code=status.HTTP_201_CREATED, headers=headers)
 
 
-@router.get('/', status_code=status.HTTP_200_OK)
+@router.get('/', status_code=status.HTTP_200_OK, response_model=List[ProductOut])
 def list_all_products(settings: config.Settings = Depends(config.get_settings)):
     with ClusterRpcProxy(settings.cluster_rpc_proxy_config) as rpc:
         products = rpc.products.list()
         return JSONResponse(content=products)
 
 
-@router.get('/{product_id}', status_code=status.HTTP_200_OK)
+@router.get('/{product_id}', status_code=status.HTTP_200_OK, response_model=ProductOut)
 def get_product_by_id(product_id: str, settings: config.Settings = Depends(config.get_settings)):
     with ClusterRpcProxy(settings.cluster_rpc_proxy_config) as rpc:
         product = rpc.products.show(product_id)

@@ -59,7 +59,7 @@ def insert_product_into_cart(cart_id: str, product_in: ProductIn, request: Reque
             }
             return JSONResponse(content=error_response, status_code=status_code)
 
-        headers = {'Location': f'{request.url}{product_in.product_id}', 'Entity': product_in.product_id}
+        headers = {'Location': f'{request.url}/{product_in.product_id}', 'Entity': product_in.product_id}
         return JSONResponse(content=service_response, status_code=status.HTTP_201_CREATED, headers=headers)
 
 
